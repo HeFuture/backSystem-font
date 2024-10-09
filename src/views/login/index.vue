@@ -21,7 +21,7 @@
                                         <el-input v-model="loginData.account" placeholder="请输入账号" />
                                     </el-form-item>
                                     <el-form-item label="密码">
-                                        <el-input v-model="loginData.password" placeholder="请输入密码" />
+                                        <el-input v-model="loginData.password" placeholder="请输入密码" show-password />
                                     </el-form-item>
 
                                     <!-- 登录注册 -->
@@ -47,10 +47,12 @@
                                         <el-input v-model="registerData.account" placeholder="账号长度6-12位" />
                                     </el-form-item>
                                     <el-form-item label="密码">
-                                        <el-input v-model="registerData.password" placeholder="请输入6-12位数字字母混合密码" />
+                                        <el-input v-model="registerData.password" placeholder="请输入6-12位数字字母混合密码"
+                                            show-password />
                                     </el-form-item>
                                     <el-form-item label="确认密码">
-                                        <el-input v-model="registerData.repassword" placeholder="请再次输入密码" />
+                                        <el-input v-model="registerData.repassword" placeholder="请再次输入密码"
+                                            show-password />
                                     </el-form-item>
                                     <div class="footer-button">
                                         <el-button type="primary" @click="Register">注册</el-button>
@@ -88,9 +90,12 @@ import { register, login } from '@/api/login'
 // 默认指向登录块(首先指向登录模块)
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { UserInfoStore } from '@/store/userInfo'
+import { loginLog } from '@/api/loginLog'
 
 const router = useRouter()
 const activeName = ref('first')
+const store = UserInfoStore()
 
 // 登录表单数据
 const loginData: formData = reactive({
@@ -115,16 +120,22 @@ const registerData: formData = reactive({
 // 登录
 const Login = async () => {
     const res = await login(loginData)
-    const {token} = res.data
+    const { id, name, account, email } = res.data.result
+    const { token } = res.data
     if (res.data.message == '登录成功') {
         ElMessage({
             message: '登录成功',
             type: 'success',
         })
-        localStorage.setItem('token',token)
+        localStorage.setItem('id', id)
+        localStorage.setItem('token', token)
+        localStorage.setItem('name', name)
+        // 登录日志埋点
+        await loginLog(res.data.result)
+        store.userInfo(id)
         // 跳转到首页
         router.push('/home')
-    }else{
+    } else {
         ElMessage.error('登录失败')
     }
 
@@ -168,6 +179,7 @@ const openPassword = () => {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        height: 60px;
 
         .welcome {
             font-size: 14px;
@@ -177,7 +189,7 @@ const openPassword = () => {
 
 // 内容
 .el-main {
-    background-image: url('@/assets/海景.jpg');
+    background-image: url('@/assets/images/海景.jpg');
     height: 87vh;
     background-size: cover;
     overflow: hidden;
@@ -219,7 +231,7 @@ const openPassword = () => {
                                 left: 0;
                                 bottom: -2px;
                                 width: 100%;
-                                height: 2px;
+                                height: 1px;
                                 background-color: #409EFF;
                                 opacity: 0;
                                 // transform: scaleX(0);

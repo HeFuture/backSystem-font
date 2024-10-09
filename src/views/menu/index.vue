@@ -11,7 +11,7 @@
                         <span>首页</span>
                     </el-menu-item>
 
-                    <el-menu-item index="1">
+                    <el-menu-item index="overview">
                         <el-icon>
                             <Document />
                         </el-icon>
@@ -25,11 +25,12 @@
                             <span>用户管理</span>
                         </template>
                         <el-menu-item-group title="管理员管理">
-                            <el-menu-item index="2-1">产品管理员</el-menu-item>
-                            <el-menu-item index="2-2">用户管理员</el-menu-item>
+                            <el-menu-item index="product_manage">产品管理员</el-menu-item>
+                            <el-menu-item index="users_manage">用户管理员</el-menu-item>
+                            <el-menu-item index="message_manage">消息管理员</el-menu-item>
                         </el-menu-item-group>
                         <el-menu-item-group title="员工管理">
-                            <el-menu-item index="2-3">用户列表</el-menu-item>
+                            <el-menu-item index="user_list">用户列表</el-menu-item>
                         </el-menu-item-group>
                     </el-sub-menu>
 
@@ -41,10 +42,10 @@
                             <span>产品管理</span>
                         </template>
                         <el-menu-item-group title="入库管理">
-                            <el-menu-item index="3-1">产品列表</el-menu-item>
+                            <el-menu-item index="productmanage">产品列表</el-menu-item>
                         </el-menu-item-group>
                         <el-menu-item-group title="出库管理">
-                            <el-menu-item index="3-3">用户列表</el-menu-item>
+                            <el-menu-item index="out_productmanage">出库列表</el-menu-item>
                         </el-menu-item-group>
                     </el-sub-menu>
 
@@ -56,26 +57,26 @@
                             <span>消息管理</span>
                         </template>
                         <el-menu-item-group title="消息管理">
-                            <el-menu-item index="4-1">产品列表</el-menu-item>
+                            <el-menu-item index="message_list">消息列表</el-menu-item>
                         </el-menu-item-group>
                         <el-menu-item-group title="回收站">
-                            <el-menu-item index="4-3">回收站</el-menu-item>
+                            <el-menu-item index="recycle">回收站</el-menu-item>
                         </el-menu-item-group>
                     </el-sub-menu>
 
-                    <el-menu-item index="5">
+                    <el-menu-item index="file">
                         <el-icon><icon-menu /></el-icon>
                         <span>合同管理</span>
                     </el-menu-item>
-                    <el-menu-item index="6">
+                    <el-menu-item index="operation_log">
                         <el-icon><icon-menu /></el-icon>
                         <span>操作日志</span>
                     </el-menu-item>
-                    <el-menu-item index="7">
+                    <el-menu-item index="login_log">
                         <el-icon><icon-menu /></el-icon>
                         <span>登录日志</span>
                     </el-menu-item>
-                    <el-menu-item index="8">
+                    <el-menu-item index="set">
                         <el-icon>
                             <Tools />
                         </el-icon>
@@ -86,13 +87,16 @@
             <el-container>
                 <el-header>
                     <span class="header-left-content">
-                        尊敬的李青欢迎你登录本系统
+                        尊敬的 {{ userStore.name }} 欢迎你登录本系统
                     </span>
                     <div class="header-right-content">
-                        <el-icon :size="24">
-                            <Message />
-                        </el-icon>
-                        <el-avatar :size="24" :src="state.circleUrl" />
+                        <el-badge :is-dot="msgStore.read_list.length > 0 ? true : false" class="item"
+                            @click="openDepartment">
+                            <el-icon :size="24">
+                                <Message />
+                            </el-icon>
+                        </el-badge>
+                        <el-avatar :size="24" :src="userStore.imageUrl" />
                         <el-dropdown>
                             <span class="el-dropdown-link">设置</span>
                             <template #dropdown>
@@ -111,6 +115,7 @@
             </el-container>
         </el-container>
     </div>
+    <dep_message ref="dep"></dep_message>
 </template>
 
 <script setup lang="ts">
@@ -118,16 +123,45 @@
 import { Menu as IconMenu, House, Document, User, TakeawayBox, ChatSquare, Tools, Message } from '@element-plus/icons-vue'
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router';
+import { UserInfoStore } from '@/store/userInfo';
+import dep_message from '@/components/dep_message.vue';
+// import { getReadListAndStatus } from '@/api/dep_msg'
+import { UseMessage } from '@/store/message'
 
-const router=useRouter()
-// 头像
-const state = reactive({
-    circleUrl: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
+const msgStore = UseMessage()
+const userStore = UserInfoStore()
+const router = useRouter()
 
-})
 
-const goLogin=()=>{
+const goLogin = () => {
     router.push('/login')
+}
+
+
+// const noread = ref(false)
+// 查询当前用户部门消息列表是否有消息，有就显示红点提示
+// const getUserRead = async () => {
+//     const res = await getReadListAndStatus(localStorage.getItem('id'))
+//     let readList = res.data[0].read_list || '[]';
+//     try {
+//         // console.log(JSON.parse(readList).length);
+//         let lenght = JSON.parse(readList).length
+//         if (lenght > 0) {
+//             noread.value = true
+//         } else {
+//             noread.value = false
+//         }
+//     } catch (error) {
+//         console.error('解析 read_list 时出错:', error);
+//     }
+// }
+// getUserRead()
+// console.log(msgStore.read_list.length);
+
+// 点击打开部门消息弹窗
+const dep = ref()
+const openDepartment = () => {
+    dep.value.open()
 }
 
 </script>
@@ -155,6 +189,11 @@ const goLogin=()=>{
         background: $base-menu-background;
     }
 
+    .el-menu-item.is-active {
+        background: #636771;
+        color: rgb(241, 150, 150);
+    }
+
 }
 
 .el-menu-item:hover {
@@ -166,7 +205,7 @@ const goLogin=()=>{
 }
 
 // tabbar
-.el-header{
+.el-header {
     display: flex;
     height: $base-tabbar-height;
     background: $base-menu-background;
@@ -174,17 +213,30 @@ const goLogin=()=>{
     align-items: center;
     color: #fff;
     padding: 0 40px;
-    .header-left-content{
+
+    .header-left-content {
         font-size: 14px;
     }
-    .header-right-content{
+
+    .header-right-content {
         width: 160px;
         display: flex;
-        justify-content:space-between;
+        justify-content: space-between;
         align-items: center;
-        .el-dropdown-link{
+
+        .el-dropdown-link {
             color: #fff;
         }
+
+        .item {
+            cursor: pointer;
+        }
     }
+}
+
+// 内容
+.el-main {
+    padding: 0;
+    background-color: #f3f4f4;
 }
 </style>

@@ -17,7 +17,7 @@
             <template #footer>
                 <div class="dialog-footer">
                     <el-button @click="state.forgetPasswordDialog = false">取消</el-button>
-                    <el-button type="primary" @click="openChangePassword">
+                    <el-button type="primary" @click="veirfyAccount">
                         下一步
                     </el-button>
                 </div>
@@ -31,17 +31,17 @@
 
                 <!-- 密码输入 -->
                 <el-form-item label="请输入密码" prop="password">
-                    <el-input v-model="forgetData.password" placeholder="请输入密码" />
+                    <el-input v-model="forgetData.password" placeholder="请输入密码" show-password />
                 </el-form-item>
                 <el-form-item label="再次输入密码" prop="repassword">
-                    <el-input v-model="forgetData.repassword" placeholder="请输入密码" />
+                    <el-input v-model="forgetData.repassword" placeholder="请输入密码" show-password />
                 </el-form-item>
             </el-form>
             <!-- 底部确认修改 -->
             <template #footer>
                 <div class="dialog-footer">
                     <el-button @click="state.changePasswordDialog = false">取消</el-button>
-                    <el-button type="primary" @click="openChangePassword">
+                    <el-button type="primary" @click="resetPassword">
                         确定
                     </el-button>
                 </div>
@@ -53,6 +53,8 @@
 <script setup lang="ts">
 
 import { ref, reactive } from 'vue'
+import { veirfy, resetPwd } from '@/api/login';
+import { ElMessage } from 'element-plus'
 
 // 表单对齐方式
 const labelPosition = ref('top')
@@ -109,16 +111,49 @@ const open = () => {
     state.forgetPasswordDialog = true
 }
 
-// 打开下一步的弹窗
-const openChangePassword = () => {
-    state.forgetPasswordDialog = false
-    state.changePasswordDialog = true
+// 忘记密码，验证邮箱与账号是否正确
+const veirfyAccount = async () => {
+    const res = await veirfy(forgetData)
+    // console.log(res);
+    if (res.data.status == 0) {
+        ElMessage({
+            message: '验证成功',
+            type: 'success',
+        })
+        // 将获取的id存储在token
+        localStorage.setItem('id', res.data.id)
+        // 关闭验证邮箱账号弹窗
+        state.forgetPasswordDialog = false
+        // 打开修改密码窗口
+        state.changePasswordDialog = true
+    } else {
+        ElMessage.error('验证失败')
+    }
+}
+
+// 验证邮箱通过后 修改用户密码
+const resetPassword = async () => {
+    if (forgetData.password == forgetData.repassword) {
+        const newPassword = forgetData.repassword
+        await resetPwd(localStorage.getItem('id'), newPassword)
+        // console.log(res);
+        ElMessage({
+            message: '修改成功',
+            type: 'success',
+        })
+        // 关闭修改密码窗口
+        state.changePasswordDialog = false
+    }else{
+        ElMessage.error('两次密码输入不一致')
+    }
+
 }
 
 // 将方法传递给父组件
 defineExpose({
     open
 })
+
 
 
 </script>
